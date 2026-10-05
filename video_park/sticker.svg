@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Свой стикер: белая пушистая кошечка дарит букет ромашек -->
+  <defs>
+    <filter id="stk" x="-10%" y="-10%" width="120%" height="120%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+      <feFlood flood-color="#fff"/>
+      <feComposite in2="d" operator="in" result="w"/>
+      <feMerge><feMergeNode in="w"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <g id="daisy">
+      <g fill="#fff" stroke="#4a3226" stroke-width="4">
+        <ellipse cx="0" cy="-17" rx="8" ry="14"/><ellipse cx="0" cy="17" rx="8" ry="14"/>
+        <ellipse cx="-17" cy="0" rx="14" ry="8"/><ellipse cx="17" cy="0" rx="14" ry="8"/>
+        <ellipse cx="-12" cy="-12" rx="8" ry="13" transform="rotate(-45 -12 -12)"/><ellipse cx="12" cy="12" rx="8" ry="13" transform="rotate(-45 12 12)"/>
+        <ellipse cx="12" cy="-12" rx="8" ry="13" transform="rotate(45 12 -12)"/><ellipse cx="-12" cy="12" rx="8" ry="13" transform="rotate(45 -12 12)"/>
+      </g>
+      <circle r="10" fill="#ffcf3f" stroke="#4a3226" stroke-width="4"/>
+    </g>
+  </defs>
+  <g filter="url(#stk)">
+    <g stroke="#4a3226" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+      <!-- тело (пушистое) -->
+      <path d="M78 512C80 470 92 436 112 410L104 396 124 392C150 366 196 350 256 350 316 350 362 366 388 392L408 396 400 410C420 436 432 470 434 512Z" fill="#fbf9f5"/>
+      <!-- уши -->
+      <path d="M118 120 108 38C107 26 119 20 128 27L208 84Z" fill="#fbf9f5"/>
+      <path d="M394 120 404 38C405 26 393 20 384 27L304 84Z" fill="#fbf9f5"/>
+      <path d="M128 104 124 52 176 86Z" fill="#f8b9c6" stroke="none"/>
+      <path d="M384 104 388 52 336 86Z" fill="#f8b9c6" stroke="none"/>
+      <!-- голова с пушистыми щёчками -->
+      <path d="M256 66C362 66 420 122 420 196 420 222 414 244 402 262L424 276 398 286 410 304 384 306C356 328 312 340 256 340 200 340 156 328 128 306L102 304 114 286 88 276 110 262C98 244 92 222 92 196 92 122 150 66 256 66Z" fill="#fbf9f5"/>
+      <!-- чёлка-пушок -->
+      <path d="M226 72 240 96 252 70 264 96 280 72" fill="none" stroke-width="6"/>
+    </g>
+    <!-- тень на шёрстке -->
+    <path d="M118 250C140 300 190 322 256 322 322 322 372 300 394 250 380 312 326 336 256 336 186 336 132 312 118 250Z" fill="#e9e6f0"/>
+    <!-- румянец -->
+    <ellipse cx="150" cy="250" rx="32" ry="18" fill="#f7a2b5" opacity=".7"/>
+    <ellipse cx="362" cy="250" rx="32" ry="18" fill="#f7a2b5" opacity=".7"/>
+    <!-- счастливые закрытые глазки -->
+    <path d="M160 206C170 186 202 186 212 206M300 206C310 186 342 186 352 206" fill="none" stroke="#2b1d18" stroke-width="9" stroke-linecap="round"/>
+    <!-- нос и рот -->
+    <path d="M244 234H268L256 248Z" fill="#f28da3" stroke="#4a3226" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M256 248V256M224 256C230 272 250 274 256 256 262 274 282 272 288 256" fill="none" stroke="#4a3226" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- усы -->
+    <path d="M118 228 70 220M120 244 74 250M394 228 442 220M392 244 438 250" stroke="#4a3226" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- букет -->
+    <g stroke="#4a3226" stroke-width="5" stroke-linecap="round">
+      <path d="M256 470 222 392M256 470 256 384M256 470 292 394M256 470 238 412M256 470 276 410" fill="none" stroke="#5f9f4f" stroke-width="7"/>
+    </g>
+    <path d="M226 352C216 360 232 372 222 380" fill="none" stroke="#4a3226" stroke-width="4"/>
+    <g transform="translate(222 384) scale(.95)"><use href="#daisy"/></g>
+    <g transform="translate(292 386) scale(.95)"><use href="#daisy"/></g>
+    <g transform="translate(257 366) scale(1.05)"><use href="#daisy"/></g>
+    <g transform="translate(240 414) scale(.75)"><use href="#daisy"/></g>
+    <g transform="translate(278 414) scale(.75)"><use href="#daisy"/></g>
+    <!-- обёртка букета -->
+    <path d="M206 430 256 512 306 430 286 448 256 438 226 448Z" fill="#ffd9e1" stroke="#4a3226" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M238 470 256 462 274 470 266 486 256 478 246 486Z" fill="#ff7d95" stroke="#4a3226" stroke-width="5" stroke-linejoin="round"/>
+    <!-- лапки держат букет -->
+    <g stroke="#4a3226" stroke-width="7" stroke-linejoin="round">
+      <path d="M162 452C160 424 180 410 202 414 222 418 232 436 226 458 220 478 202 488 184 484 168 480 162 468 162 452Z" fill="#fbf9f5"/>
+      <path d="M350 452C352 424 332 410 310 414 290 418 280 436 286 458 292 478 310 488 328 484 344 480 350 468 350 452Z" fill="#fbf9f5"/>
+    </g>
+    <g fill="#f7a8b8">
+      <circle cx="180" cy="434" r="5"/><circle cx="196" cy="428" r="5"/><circle cx="210" cy="436" r="5"/>
+      <circle cx="332" cy="434" r="5"/><circle cx="316" cy="428" r="5"/><circle cx="302" cy="436" r="5"/>
+    </g>
+    <!-- сердечко над головой -->
+    <path d="M440 92C416 76 404 64 404 50 404 39 412 32 422 32 430 32 436 37 440 44 444 37 450 32 458 32 468 32 476 39 476 50 476 64 464 76 440 92Z" fill="#ff7d95" stroke="#4a3226" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M416 48C417 43 421 40 425 40" fill="none" stroke="#ffd0da" stroke-width="5" stroke-linecap="round"/>
+    <!-- искорки -->
+    <g fill="#ffd25e" stroke="#4a3226" stroke-width="4" stroke-linejoin="round">
+      <path d="M56 140 62 124 68 140 84 146 68 152 62 168 56 152 40 146Z"/>
+      <path d="M58 360 63 348 68 360 80 365 68 370 63 382 58 370 46 365Z"/>
+    </g>
+  </g>
+</svg>
