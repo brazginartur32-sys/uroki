@@ -8,25 +8,27 @@
 @font-face{font-family:'Roboto';font-style:normal;font-weight:100 900;src:url(fonts/roboto-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
 :root{
   --wall:#d3dde9; --out:#fff8df; --in:#fbfcfb; --ink:#141414;
-  --out-time:#a8a596; --in-time:#a2a8ad; --check:#d2ac2f;
-  --blue:#4489f2; --rec:#80a0fb; --red:#d8575d; --cancel:#6f87b5;
+  --out-time:#bdb69a; --in-time:#b3b6b6; --check:#d2ac2f;
+  --blue:#4a7af7; --rec:#7f9ffa; --red:#c65a55; --cancel:#6f87b5;
 }
 html,body{margin:0;width:576px;height:576px;background:#000;overflow:hidden;font-family:'Roboto',sans-serif;-webkit-font-smoothing:antialiased}
 #cam{position:absolute;inset:0;overflow:hidden;background:#000}
-/* телефон рисуется шире и сжимается по горизонтали — как в референсе (кадр 9:19 втиснут в квадрат) */
-#phone{position:absolute;left:0;top:0;width:678px;height:576px;transform-origin:0 0;background:var(--wall);overflow:hidden}
-#chatwrap{position:absolute;left:0;top:0;width:678px;height:576px;transform-origin:62% 52%}
-#list{position:absolute;left:0;right:0;bottom:130px;display:flex;flex-direction:column}
-.row{display:flex;margin-top:16px;padding:0 13px}
-.row.cont{margin-top:8px}
+/* экран телефона рисуется шириной 764 и сжимается до 576 — как в референсе (вертикальная запись втиснута в квадрат) */
+#phone{position:absolute;left:0;top:0;width:764px;height:576px;transform-origin:0 0;background:var(--wall);overflow:hidden}
+#chatwrap{position:absolute;left:0;top:0;width:764px;height:576px}
+#list{position:absolute;left:0;right:0;bottom:131px;display:flex;flex-direction:column}
+.row{display:flex;margin-top:16px;padding:0 17px 0 9px}
+.row.cont{margin-top:4px}
 .row.out{justify-content:flex-end}
-.b{position:relative;max-width:560px;box-sizing:border-box;padding:13px 16px 15px 21px;border-radius:30px;
-  font-size:29px;line-height:34px;color:var(--ink);letter-spacing:.1px}
-.out .b{background:var(--out)}
+.b{position:relative;max-width:640px;box-sizing:border-box;padding:13px 25px 15px 24px;border-radius:19px;
+  font-size:35px;line-height:37px;color:var(--ink);letter-spacing:.1px}
+.out .b{background:var(--out);padding-right:13px}
 .in .b{background:var(--in)}
-.b .sp{display:inline-block;height:1px;width:96px}
-.out .b .sp{width:126px}
-.b .tm{position:absolute;right:17px;bottom:11px;font-size:21px;line-height:24px;display:flex;align-items:center;gap:5px}
+.in:not(.tailed) .b{border-bottom-left-radius:6px} .in.cont .b{border-top-left-radius:6px}
+.out:not(.tailed) .b{border-bottom-right-radius:6px} .out.cont .b{border-top-right-radius:6px}
+.b .sp{display:inline-block;height:1px}
+.b .tm{position:absolute;right:25px;bottom:11px;font-size:25px;line-height:28px;display:flex;align-items:center;gap:4px}
+.out .b .tm{right:13px}
 .in .b .tm{color:var(--in-time)}
 .out .b .tm{color:var(--out-time)}
 .tm svg{display:block}
@@ -34,70 +36,86 @@ html,body{margin:0;width:576px;height:576px;background:#000;overflow:hidden;font
 .in .tail{left:-8px}
 .out .tail{right:-8px;transform:scaleX(-1)}
 .row.tailed .tail{display:block}
-.in.tailed .b{border-bottom-left-radius:8px}
-.out.tailed .b{border-bottom-right-radius:8px}
+.in.tailed .b{border-bottom-left-radius:7px}
+.out.tailed .b{border-bottom-right-radius:7px}
 .in .tail path{fill:var(--in)} .out .tail path{fill:var(--out)}
-.stk{position:relative;width:392px;height:392px;margin-right:8px;margin-bottom:6px}
+.stk{position:relative;width:396px;height:396px;margin-right:6px;margin-bottom:4px}
 .stk img{width:100%;height:100%;display:block}
-.stk .tm{position:absolute;right:30px;bottom:26px;background:rgba(60,50,45,.22);color:#fff;font-size:21px;line-height:24px;
-  padding:4px 10px;border-radius:14px;display:flex;align-items:center;gap:5px}
+.stk .tm{position:absolute;right:34px;bottom:30px;background:rgba(60,50,45,.22);color:#fff;font-size:25px;line-height:28px;
+  padding:4px 12px;border-radius:16px;display:flex;align-items:center;gap:4px}
 
 #bar{position:absolute;left:5px;right:5px;top:466px;height:100px;background:#fcfcfc;border-radius:50px;overflow:hidden}
-#bar .ic{position:absolute}
-#lefticon{left:24px;top:30px}
-#txt{position:absolute;left:84px;right:160px;top:31px;font-size:30px;line-height:38px;color:var(--ink);white-space:nowrap}
-#txt .ph{color:#9b9b9b}
-#txt u{text-decoration:none;border-bottom:2.5px solid #222;padding-bottom:1px}
-.cur{display:inline-block;width:2.6px;height:36px;background:var(--blue);vertical-align:-8px;margin:0 -1px}
-#clip{left:526px;top:31px}
-#btn{position:absolute;left:597px;top:19px;width:62px;height:62px;border-radius:50%;background:var(--blue)}
+#normrow,#recrow{position:absolute;inset:0}
+.ic{position:absolute}
+#lefticon{left:22px;top:27px}
+#txtwrap{position:absolute;left:94px;right:190px;top:28px;height:44px}
+#txt{font-size:36px;line-height:44px;color:var(--ink);white-space:nowrap}
+#txt .ph{color:#9d9d9d}
+#txt u{text-decoration:none;border-bottom:3px solid #2a2a2a;padding-bottom:0}
+.cur{display:inline-block;width:3px;height:46px;background:#6a6c78;vertical-align:-11px;margin:0 -1px}
+.cur.idle{background:var(--blue)}
+#clip{left:595px;top:27px}
+#btn{position:absolute;left:672px;top:19.5px;width:74px;height:74px;border-radius:50%;background:var(--blue)}
 #btn svg{position:absolute;inset:0}
 /* запись голосового */
-#recrow{position:absolute;inset:0;display:none}
-#dot{position:absolute;left:41px;top:43px;width:15px;height:15px;border-radius:50%;background:var(--red)}
-#trash{position:absolute;left:30px;top:30px}
-#timer{position:absolute;left:84px;top:31px;font-size:28px;line-height:38px;color:#222;letter-spacing:.3px}
-#slide{position:absolute;left:250px;top:32px;font-size:27px;line-height:38px;color:#8e8e8e}
-#otm{position:absolute;left:280px;top:31px;font-size:28px;line-height:38px;color:var(--cancel);font-weight:500;letter-spacing:1px}
-#otmhl{position:absolute;left:230px;top:-10px;width:250px;height:120px;border-radius:50%;background:#dbe5fb;opacity:0}
-#bigc{position:absolute;left:561px;top:440px;width:156px;height:156px;border-radius:50%;background:var(--rec);transform-origin:50% 50%}
+#dot{position:absolute;left:42px;top:32.5px;width:18px;height:18px;border-radius:50%;background:#c4553f}
+#trash{position:absolute;left:21px;top:20px}
+#timer{position:absolute;left:90px;top:24px;font-size:30px;line-height:40px;color:#8e8e93;letter-spacing:.3px;white-space:nowrap}
+#timer .roll{display:inline-block;position:relative;overflow:hidden;vertical-align:top;height:40px}
+#timer .roll span{display:block}
+#slide{position:absolute;left:280px;top:28px;font-size:30px;line-height:40px;color:#8e8e8e;white-space:nowrap}
+#otm{position:absolute;left:274px;width:200px;text-align:center;top:27.5px;font-size:26px;line-height:34px;color:var(--cancel);font-weight:500;letter-spacing:2px}
+#otmhl{position:absolute;left:227px;top:0;width:299px;height:100%;border-radius:10px;opacity:0;
+  background:linear-gradient(90deg,rgba(218,226,248,0) 0,#dae2f8 33px,#dae2f8 100%)}
+#bigc{position:absolute;left:634px;top:440px;width:176px;height:176px;border-radius:50%;background:var(--rec);transform-origin:50% 50%}
 #bigc svg{position:absolute;left:0;top:0}
-#lock{position:absolute;left:608px;top:283px;width:56px;height:94px;border-radius:28px;background:#f6f8f9;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-#pause{position:absolute;left:608px;top:335px;width:56px;height:56px;border-radius:50%;background:#eef5f6;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-#once{position:absolute;left:608px;top:238px;width:56px;height:56px;border-radius:50%;background:#eef5f6;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-#tip{position:absolute;left:126px;top:328px;width:541px;box-sizing:border-box;padding:17px 22px 19px;background:rgba(52,56,64,.94);
-  border-radius:14px;color:#fff;font-size:25px;line-height:36px;opacity:0}
-#tip:after{content:'';position:absolute;right:30px;bottom:-12px;border:12px solid transparent;border-bottom:0;border-top-color:rgba(52,56,64,.94)}
-#blurdefs{position:absolute;width:0;height:0}
+.pill{position:absolute;background:#f1f6f7;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+#lock{left:688px;top:285px;width:60px;height:90px;border-radius:30px}
+#once{left:688px;top:237px;width:56px;height:56px;border-radius:50%}
+#pause{left:688px;top:334px;width:56px;height:56px;border-radius:50%}
+#tip{position:absolute;left:143px;top:327px;width:607px;height:129px;box-sizing:border-box;padding:17px 24px 0;background:rgba(56,60,78,.95);
+  border-radius:14px;color:#fff;font-size:28px;line-height:47px;opacity:0}
+#tip:after{content:'';position:absolute;right:27px;bottom:-10px;border:12px solid transparent;border-bottom:0;border-top:10px solid rgba(56,60,78,.95)}
+#defs{position:absolute;width:0;height:0}
 </style>
 </head>
 <body>
-<svg id="blurdefs"><filter id="mb" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur id="mbg" stdDeviation="0 0"/></filter></svg>
+<svg id="defs">
+  <filter id="vb" x="-2%" y="-10%" width="104%" height="120%"><feGaussianBlur id="vbg" stdDeviation="0 0"/></filter>
+  <filter id="hb" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="hbg" stdDeviation="0 0"/></filter>
+  <filter id="bb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur id="bbg" stdDeviation="0 0"/></filter>
+  <filter id="pb" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur id="pbg" stdDeviation="0 0"/></filter>
+</svg>
 <div id="cam">
  <div id="phone">
   <div id="chatwrap"><div id="list"></div></div>
   <div id="bar">
     <div id="normrow">
-      <svg class="ic" id="lefticon" width="42" height="42" viewBox="0 0 42 42"></svg>
-      <div id="txt"></div>
-      <svg class="ic" id="clip" width="40" height="40" viewBox="0 0 40 40"><path d="M26 11.5 14.6 23a3.5 3.5 0 0 0 5 5L31.5 16a6.4 6.4 0 0 0-9-9L10.4 19.1a9.3 9.3 0 0 0 13.2 13.2l9.2-9.2" fill="none" stroke="#7d7d7d" stroke-width="2.6" stroke-linecap="round"/></svg>
-      <div id="btn"><svg width="62" height="62" viewBox="0 0 62 62"></svg></div>
+      <svg class="ic" id="lefticon" width="46" height="46" viewBox="0 0 42 42"></svg>
+      <div id="txtwrap"><div id="txt"></div></div>
+      <svg class="ic" id="clip" width="46" height="46" viewBox="0 0 40 40"><path d="M26 11.5 14.6 23a3.5 3.5 0 0 0 5 5L31.5 16a6.4 6.4 0 0 0-9-9L10.4 19.1a9.3 9.3 0 0 0 13.2 13.2l9.2-9.2" fill="none" stroke="#7d7d7d" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <div id="btn"><svg width="74" height="74" viewBox="0 0 62 62"></svg></div>
     </div>
     <div id="recrow">
       <div id="otmhl"></div>
       <div id="dot"></div>
-      <svg id="trash" width="40" height="42" viewBox="0 0 40 42"><g id="lid"><path d="M8 11h24M16 11V7.5h8V11" fill="none" stroke="#d8575d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><path d="M11 15h18l-1.6 20.5a3 3 0 0 1-3 2.7h-8.8a3 3 0 0 1-3-2.7Z" fill="#d8575d"/><path d="M17 20v12M23 20v12" stroke="#fbe3e4" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <svg id="trash" width="54" height="57" viewBox="0 0 40 42">
+        <g id="lid"><path d="M8 11h24M16 11V7.5h8V11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+        <path id="tbody" d="M11 15h18l-1.6 20.5a3 3 0 0 1-3 2.7h-8.8a3 3 0 0 1-3-2.7Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        <path id="tstripes" d="M15.8 20v12M20 20v12M24.2 20v12" stroke="#fbe6e6" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
       <div id="timer"></div>
       <div id="slide">‹ Влево — отмена</div>
       <div id="otm">ОТМЕНА</div>
     </div>
   </div>
-  <div id="once"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="15" fill="none" stroke="#7c8185" stroke-width="2.6" stroke-dasharray="5 3.4"/><path d="M25.5 23.5 29 21.5V35" fill="none" stroke="#5f6468" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-  <div id="pause"><svg width="56" height="56" viewBox="0 0 56 56"><rect x="20" y="18" width="5" height="20" rx="2" fill="#6d7276"/><rect x="31" y="18" width="5" height="20" rx="2" fill="#6d7276"/></svg></div>
-  <div id="lock"><svg width="56" height="94" viewBox="0 0 56 94"><rect x="17" y="43" width="22" height="18" rx="3.5" fill="#7c8185"/><path d="M21 43v-6a7 7 0 0 1 14 0v6" fill="none" stroke="#7c8185" stroke-width="3"/><path d="M22 26l6-5 6 5" fill="none" stroke="#a5a9ad" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-  <div id="bigc"><svg width="156" height="156" viewBox="-3 -3 150 150">
-    <g id="bmic"><rect x="66" y="50" width="18" height="32" rx="9" fill="#fff"/><path d="M58 72a17 17 0 0 0 34 0M75 89v9" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
-    <g id="bsend"><path d="M60 54 98 75 60 96 64 75Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></g>
+  <div id="once" class="pill"><svg width="56" height="56" viewBox="0 0 56 56"><g id="onceIcon"><circle cx="28" cy="28" r="15" fill="none" stroke="#7c8185" stroke-width="2.6" stroke-dasharray="5 3.4"/><path d="M25.5 23.5 29 21.5V35" fill="none" stroke="#5f6468" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="lockIcon"><rect x="16" y="26" width="24" height="19" rx="4" fill="#6f7478"/><path d="M20.5 26v-5a7.5 7.5 0 0 1 15 0v5" fill="none" stroke="#6f7478" stroke-width="3.4"/><circle cx="28" cy="35" r="2.6" fill="#fff"/></g></svg></div>
+  <div id="pause" class="pill"><svg width="56" height="56" viewBox="0 0 56 56"><rect x="20" y="18" width="5" height="20" rx="2" fill="#6d7276"/><rect x="31" y="18" width="5" height="20" rx="2" fill="#6d7276"/></svg></div>
+  <div id="lock" class="pill"><svg width="60" height="90" viewBox="0 0 60 90"><rect x="15" y="44" width="30" height="24" rx="5" fill="#6f7478"/><path d="M20.5 44v-7a9.5 9.5 0 0 1 19 0v7" fill="none" stroke="#6f7478" stroke-width="4"/><circle cx="30" cy="55.5" r="3.2" fill="#fff"/></svg></div>
+  <div id="bigc"><svg width="176" height="176" viewBox="0 0 176 176">
+    <g id="bmic"><rect x="74" y="62" width="12" height="24" rx="6" fill="none" stroke="#fff" stroke-width="3"/><path d="M68 78a12 12 0 0 0 24 0M80 90v8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
+    <g id="bsend"><path d="M64 62 108 80 64 98 71 80Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M71 80H90" stroke="#7f9ffa" stroke-width="2.4" stroke-linecap="round"/></g>
   </svg></div>
   <div id="tip">Удерживайте для записи звука. Нажмите для переключения на видео.</div>
  </div>
@@ -106,25 +124,26 @@ html,body{margin:0;width:576px;height:576px;background:#000;overflow:hidden;font
 <script>
 const S = window.SCENE, T = S.t;
 const $ = s => document.querySelector(s);
-const SX = 576 / 678;                       // горизонтальное «сжатие» кадра
+const SX = 576 / 764;                       // горизонтальное «сжатие» кадра
+const FR = 1 / 30;
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const ease = p => { p = clamp(p); return 1 - Math.pow(1 - p, 3); };
-const easeIO = p => { p = clamp(p); return p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; };
 const lerp = (a, b, k) => a + (b - a) * k;
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const fnum = x => x.toFixed(3);
 
 const ICON = {
   smile: '<circle cx="21" cy="21" r="15" fill="none" stroke="#7d7d7d" stroke-width="2.6"/><circle cx="15.8" cy="17.5" r="2" fill="#7d7d7d"/><circle cx="26.2" cy="17.5" r="2" fill="#7d7d7d"/><path d="M14.5 24.5c3.6 4.4 9.4 4.4 13 0" fill="none" stroke="#7d7d7d" stroke-width="2.6" stroke-linecap="round"/>',
   sticker: '<path d="M8 13a6 6 0 0 1 6-6h14a6 6 0 0 1 6 6v9L23 35h-9a6 6 0 0 1-6-6Z" fill="none" stroke="#7d7d7d" stroke-width="2.6" stroke-linejoin="round"/><path d="M34 22h-6a5 5 0 0 0-5 5v8" fill="none" stroke="#7d7d7d" stroke-width="2.6" stroke-linejoin="round"/><circle cx="16" cy="17.5" r="2" fill="#7d7d7d"/><circle cx="25" cy="17.5" r="2" fill="#7d7d7d"/><path d="M15 23.5c1.8 2 4.6 2.6 7 1.6" fill="none" stroke="#7d7d7d" stroke-width="2.4" stroke-linecap="round"/>',
-  trash: '<g transform="translate(1 0)"><path d="M8 11h24M16 11V7.5h8V11" fill="none" stroke="#d8575d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 15h18l-1.6 20.5a3 3 0 0 1-3 2.7h-8.8a3 3 0 0 1-3-2.7Z" fill="#d8575d"/></g>',
-  send: '<path d="M17 30.5 44 19 36 44l-6.5-9.5Zm12.5 4L44 19" fill="#fff" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>',
-  mic: '<rect x="25" y="15" width="12" height="21" rx="6" fill="#fff"/><path d="M19.5 30a11.5 11.5 0 0 0 23 0M31 42v5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>',
-  cam: '<rect x="17" y="17" width="28" height="28" rx="9" fill="none" stroke="#fff" stroke-width="3.2"/><circle cx="31" cy="31" r="6" fill="none" stroke="#fff" stroke-width="3.2"/>',
+  trash: '<g transform="translate(1 -1)"><path d="M8 11h24M16 11V7.5h8V11" fill="none" stroke="#c65a55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 15h18l-1.6 20.5a3 3 0 0 1-3 2.7h-8.8a3 3 0 0 1-3-2.7Z" fill="#c65a55"/><path d="M15.8 20v12M20 20v12M24.2 20v12" stroke="#fbe6e6" stroke-width="1.8" stroke-linecap="round"/></g>',
+  send: '<path d="M16 30.5 45 18.5 37 45l-7-10Z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M30 35 45 18.5" stroke="#4a7af7" stroke-width="2"/>',
+  mic: '<rect x="26" y="15" width="10" height="20" rx="5" fill="#fff"/><path d="M20.5 29a10.5 10.5 0 0 0 21 0M31 40v5" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>',
+  cam: '<rect x="18" y="18" width="26" height="26" rx="8" fill="#fff"/><circle cx="31" cy="31" r="6.2" fill="none" stroke="#4a7af7" stroke-width="3"/>',
 };
 const TAIL = '<svg class="tail" viewBox="0 0 20 20"><path d="M8 0V10C8 14.5 5 18 0 20H14C16 20 18 20 20 20V0Z"/></svg>';
-const CHECK2 = c => `<svg width="30" height="16" viewBox="0 0 30 16"><path d="M2 8.5 6.5 13 15.5 3M12 13 21.5 3" fill="none" stroke="${c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const CHECK1 = c => `<svg width="30" height="16" viewBox="0 0 30 16"><path d="M8 8.5 12.5 13 21.5 3" fill="none" stroke="${c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const CLOCK = c => `<svg width="30" height="16" viewBox="0 0 30 16"><circle cx="15" cy="8" r="6.5" fill="none" stroke="${c}" stroke-width="2"/><path d="M15 4.5V8l2.5 1.6" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+const CHECK2 = c => `<svg width="24" height="16" viewBox="1 0 21 16"><path d="M2 8.5 6.5 13 15.5 3M12 13 21.5 3" fill="none" stroke="${c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHECK1 = c => `<svg width="24" height="16" viewBox="1 0 21 16"><path d="M5 8.5 9.5 13 18.5 3" fill="none" stroke="${c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CLOCK = c => `<svg width="24" height="16" viewBox="1 0 21 16"><circle cx="12" cy="8" r="6.5" fill="none" stroke="${c}" stroke-width="2"/><path d="M12 4.5V8l2.5 1.6" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
 
 // ---------- сообщения ----------
 const M6final = typeof S.M6 === 'string' ? S.M6 : S.M6.final;
@@ -140,7 +159,8 @@ const msgs = [
   { side: 'in', text: S.M8, time: S.timeB, t: T.m8 },
 ];
 window.MSGS = msgs.map(m => ({ t: m.t, side: m.side }));
-const PUNCH = [T.m2Send, T.m3, T.m4, T.m5Send, T.m6Send, T.m7, T.m8];
+const EVENTS = msgs.filter(m => m.t > 0).map(m => m.t);
+const SENDS = [T.m2Send, T.m5Send, T.m6Send];
 
 function build() {
   const list = $('#list');
@@ -150,10 +170,19 @@ function build() {
     if (m.sticker) {
       row.innerHTML = `<div class="stk"><img src="sticker.svg"><span class="tm">${m.time}${CHECK2('#fff')}</span></div>`;
     } else {
-      row.innerHTML = `<div class="b">${TAIL}<span class="tx">${esc(m.text)}</span><span class="sp"></span><span class="tm"><span>${m.time}</span><span class="st"></span></span></div>`;
+      row.innerHTML = `<div class="b">${TAIL}<span class="tx">${esc(m.text)}</span><span class="sp"></span><span class="tm"><span>${m.time}</span><span class="st">${m.side === 'out' ? CHECK2('#d2ac2f') : ''}</span></span></div>`;
     }
     list.appendChild(row);
     m.el = row;
+  });
+}
+function sizeSpacers() {
+  // место под время: ширина метки + ~20px телефона (≈15px в кадре), как в референсе
+  msgs.forEach(m => {
+    if (m.sticker) return;
+    m.el.style.display = '';
+    const tm = m.el.querySelector('.tm');
+    m.el.querySelector('.sp').style.width = (tm.offsetWidth + 20) + 'px';
   });
 }
 
@@ -176,178 +205,257 @@ KEYS.push({ t: T.m5Send, s: '', send: true });
 if (typeof S.M6 === 'string') {
   KEYS.push(...typeSeq(S.M6, T.m6Type[0], T.m6Type[1]));
 } else {
-  // шаги: набор (type) и автозамена клавиатурой (set); время делится по числу нажатий
-  const [a, b] = T.m6Type;
-  let cur = '', cost = 0;
-  const plan = S.M6.steps.map(st => { const c = st.type ? st.type.length - (st.type.startsWith(cur) ? cur.length : 0) : 3; cur = st.type || st.set; cost += c; return { ...st, c }; });
-  let tt = a; cur = '';
-  for (const st of plan) {
-    const dt = (b - a) * st.c / cost;
-    if (st.type) { const from = st.type.startsWith(cur) ? cur : ''; KEYS.push(...typeSeq(st.type, tt, tt + dt, from)); cur = st.type; }
-    else { KEYS.push({ t: tt + dt * 0.7, s: st.set, fix: true }); cur = st.set; }
-    tt += dt;
-  }
+  KEYS.push(...typeSeq(S.M6.typo, T.m6Type[0], T.m6Type[1]));
+  KEYS.push({ t: T.m6Fix, s: S.M6.final, fix: true });
 }
 KEYS.push({ t: T.m6Send, s: '', send: true });
 KEYS.sort((x, y) => x.t - y.t);
 window.KEYS = KEYS.map(k => ({ t: k.t, send: !!k.send, fix: !!k.fix }));
+const TYPE_END = [T.m2Type[1], T.m5Type[1]];
 
-function inputAt(t) { let s = '', last = -9; for (const k of KEYS) { if (k.t <= t) { s = k.s; last = k.t; } else break; } return { s, last }; }
+function inputAt(t) {
+  let s = '', last = -9, fix = false;
+  for (const k of KEYS) { if (k.t <= t) { s = k.s; last = k.t; fix = !!k.fix; } else break; }
+  return { s, last, fix };
+}
 
-// ---------- кадр ----------
+// профиль «рывка»: только вертикальный смаз, по кадрам от события (как у референса)
+const PUNCH_PROFILE = [2.6, 4.2, 3.6, 2.2, 1.3, 0.6];
+function punchAt(t) {
+  let v = 0;
+  for (const e of EVENTS) {
+    const n = Math.floor((t - e) / FR + 1e-6);
+    if (n >= 0 && n < PUNCH_PROFILE.length) v = Math.max(v, PUNCH_PROFILE[n]);
+  }
+  return v;
+}
+
+// кривая финального наезда (замер масштаба референса по кадрам)
+const ZK = [[18.15, 1.0], [18.2, 1.01], [18.5, 1.10], [18.73, 1.20], [19.0, 1.35], [19.2, 1.48], [19.4, 1.64], [19.6, 1.85], [19.8, 2.0], [20.0, 2.2], [20.3, 2.42]];
+function zoomAt(t) {
+  if (t <= ZK[0][0]) return 1;
+  for (let i = 1; i < ZK.length; i++) if (t <= ZK[i][0]) {
+    const [a, za] = ZK[i - 1], [b, zb] = ZK[i];
+    return za + (zb - za) * (t - a) / (b - a);
+  }
+  return ZK[ZK.length - 1][1];
+}
+
+function setBlur(id, x, y) { $(id).setAttribute('stdDeviation', `${x.toFixed(2)} ${y.toFixed(2)}`); }
+
 let lastTxt = null;
 window.render = function (t) {
-  // --- поле ввода / запись ---
-  const recOn = t >= T.rec && t < T.recGone;
-  const { s, last } = inputAt(t);
-  $('#recrow').style.display = recOn ? 'block' : 'none';
-  $('#normrow').style.display = recOn ? 'none' : '';
-  if (!recOn) {
-    // курсор мигает, пока поле в фокусе
-    const blink = (t - last) < .45 || Math.floor((t - last) / .45) % 2 === 1;
-    const cur = blink ? '<span class="cur"></span>' : '';
-    let html;
-    if (s) {
-      // подчёркнуто слово, которое сейчас набирается (как в клавиатуре Android)
-      const i = s.lastIndexOf(' ') + 1, w = s.slice(i);
-      const composing = (t - last) < 0.6 && !/[?!]$/.test(s);
-      html = esc(s.slice(0, i)) + (composing && w ? `<u>${esc(w)}</u>` : esc(w)) + cur;
-    } else {
-      html = cur + '<span class="ph">Сообщение</span>';
-    }
-    if (html !== lastTxt) { $('#txt').innerHTML = html; lastTxt = html; }
-    // левая иконка
-    let left = s ? 'smile' : 'sticker';
-    if (t >= T.recGone && t < T.m5Type[0] + 0.12) left = 'trash';
-    const li = $('#lefticon');
-    if (li.dataset.k !== left) { li.innerHTML = ICON[left]; li.dataset.k = left; }
-    $('#clip').style.display = s ? 'none' : '';
-    // правая кнопка: отправка / камера / микрофон
-    let bk = s ? 'send' : (t >= T.m2Send && t < T.tooltip[0] ? 'cam' : 'mic');
-    const bs = $('#btn svg');
-    if (bs.dataset.k !== bk) { bs.innerHTML = ICON[bk]; bs.dataset.k = bk; }
-    // кнопка «нажимается»
-    const press = t >= T.tooltip[0] - .08 && t < T.tooltip[0] + .05 ? .9 : 1;
-    $('#btn').style.transform = `scale(${press})`;
+  // ================= поле ввода / запись =================
+  const inCross = t >= T.recFade && t < T.rec;                          // 2.10→2.20 кроссфейд
+  const crossIn = clamp((t - T.recFade) / (T.rec - T.recFade));
+  const recVis = t >= T.recFade && t < T.recGone + 0.08;
+  const normVis = t < T.rec || t >= T.recGone;
+  const nr = $('#normrow'), rr = $('#recrow');
+  nr.style.display = normVis ? '' : 'none';
+  rr.style.display = recVis ? '' : 'none';
+  let normA = 1;
+  if (inCross) normA = 1 - crossIn;
+  if (t >= T.recGone) normA = clamp((t - T.recGone) / 0.08);
+  nr.style.opacity = fnum(normA);
+
+  // --- обычная строка ---
+  let { s, last, fix } = inputAt(t);
+  // отправка: старый текст ещё 2 кадра смазывается вправо и улетает (как в референсе)
+  let sendK = -1;
+  for (const e of SENDS) if (t >= e - FR && t < e + 2 * FR) { sendK = (t - (e - FR)) / (3 * FR); s = inputAt(e - 1e-3).s; }
+  const txt = $('#txt');
+  const blink = (t - last) < .45 || Math.floor((t - last) / .45) % 2 === 1;
+  const cur = blink && sendK < 0 ? `<span class="cur${s ? '' : ' idle'}"></span>` : '';
+  let html;
+  if (s) {
+    const i = s.lastIndexOf(' ') + 1, w = s.slice(i);
+    const ended = TYPE_END.some(e => t >= e - 1e-6) && !(t >= T.m6Type[0] && t < T.m6Send) ? true : fix;
+    const composing = !ended && sendK < 0;
+    html = esc(s.slice(0, i)) + (composing && w ? `<u>${esc(w)}</u>` : esc(w)) + cur;
   } else {
-    const stopAt = T.recCancel - 0.13 + 1e-4;
+    html = cur + '<span class="ph">Сообщение</span>';
+  }
+  if (html !== lastTxt) { txt.innerHTML = html; lastTxt = html; }
+  if (sendK >= 0) {
+    txt.style.filter = 'url(#hb)';
+    setBlur('#hbg', 3 + 9 * sendK, 0);
+    txt.style.transform = `translate(${(30 * sendK * sendK).toFixed(1)}px, ${(-14 * sendK * sendK).toFixed(1)}px)`;
+    txt.style.opacity = fnum(1 - 0.55 * sendK);
+  } else { txt.style.filter = ''; txt.style.transform = ''; txt.style.opacity = ''; }
+  // левая иконка
+  let left = s ? 'smile' : 'sticker';
+  if (t >= T.recGone && t < T.m5Type[0] + 0.12) left = 'trash';
+  const li = $('#lefticon');
+  if (li.dataset.k !== left) { li.innerHTML = ICON[left]; li.dataset.k = left; }
+  // большой круг после отмены держится до recCircleOff — он закрывает кнопку и скрепку
+  const circleAfter = t >= T.recGone && t < T.recCircleOff + 0.07;
+  const inM5 = t >= T.m5Type[0] && t < T.m5Send + 2 * FR;
+  $('#clip').style.display = !circleAfter && (!s || inM5) ? '' : 'none';
+  const bk = s ? 'send' : (t >= T.m2Send + 2 * FR && t < T.tooltip[0] ? 'cam' : 'mic');
+  const bs = $('#btn svg');
+  if (bs.dataset.k !== bk) { bs.innerHTML = ICON[bk]; bs.dataset.k = bk; }
+  $('#btn').style.display = circleAfter ? 'none' : '';
+  const press = t >= T.tooltip[0] - .08 && t < T.tooltip[0] + .05 ? .9 : 1;
+  $('#btn').style.transform = `scale(${press})`;
+
+  // --- строка записи ---
+  if (recVis) {
+    rr.style.opacity = fnum(inCross ? crossIn : 1);
+    const stopAt = T.recStop + 1e-4;
     const rt = Math.max(0, (Math.min(t, stopAt) - T.rec) * T.recSpeed);
-    const tt = `0:${String(Math.floor(rt)).padStart(2, '0')},${Math.floor(rt * 10) % 10}`;
-    $('#timer').textContent = tt;
+    const sec = Math.floor(rt + 1e-6), tenth = Math.floor(rt * 10 + 1e-6) % 10;
+    // прокрутка цифры секунд 2 кадра при смене
+    const tCross = T.rec + sec / T.recSpeed;
+    const pr = sec > 0 ? (t - tCross) / (2 * FR) : 1;
+    const ss = String(sec).padStart(2, '0'), ps = String(Math.max(0, sec - 1)).padStart(2, '0');
+    let secHtml = '';
+    for (let i = 0; i < 2; i++) {
+      if (pr < 1 && ss[i] !== ps[i]) {
+        const y = -40 * ease(pr);
+        secHtml += `<span class="roll"><span style="transform:translateY(${y.toFixed(1)}px);opacity:${fnum(1 - pr)}">${ps[i]}</span><span style="transform:translateY(${y.toFixed(1)}px)">${ss[i]}</span></span>`;
+      } else secHtml += ss[i];
+    }
+    $('#timer').innerHTML = `0:${secHtml},${pr < 1 ? 0 : tenth}`;
     const canceled = t >= T.recCancel;
     $('#dot').style.display = canceled ? 'none' : '';
-    $('#dot').style.opacity = (0.5 + 0.5 * Math.cos(2 * Math.PI * (t - T.rec) / 0.55)).toFixed(3);
-    $('#trash').style.display = canceled ? '' : 'none';
+    $('#dot').style.opacity = fnum(0.55 + 0.45 * Math.cos(2 * Math.PI * (t - T.rec) / 0.55));
+    const tr = $('#trash');
+    tr.style.display = canceled ? '' : 'none';
+    const red = t >= T.recCancel + 0.1;
+    tr.style.color = red ? '#c65a55' : '#9a9a9a';
+    $('#tbody').setAttribute('fill', red ? '#c65a55' : 'none');
+    $('#tstripes').style.display = red ? '' : 'none';
     const lidA = canceled ? Math.sin(clamp((t - T.recCancel) / .25) * Math.PI) * -28 : 0;
     $('#lid').setAttribute('transform', `rotate(${lidA.toFixed(1)} 8 11)`);
-    const lk = clamp((t - T.recLock) / 0.2);
-    $('#slide').style.opacity = (1 - lk).toFixed(3);
-    $('#slide').style.transform = `translateX(${(-lk * 30).toFixed(1)}px)`;
-    const otmA = canceled ? 1 - clamp((t - T.recCancel - .12) / .18) : lk;
-    $('#otm').style.opacity = otmA.toFixed(3);
-    $('#otmhl').style.opacity = canceled ? (Math.sin(clamp((t - T.recCancel) / .3) * Math.PI) * .9).toFixed(3) : 0;
+    // закрепление: «ОТМЕНА» съезжает сверху, «Влево — отмена» уходит вниз
+    const lk = clamp((t - T.recLock - 0.05) / 0.17);
+    const sl = $('#slide');
+    sl.style.opacity = fnum(1 - lk);
+    sl.style.transform = `translateY(${(12 * lk).toFixed(1)}px)`;
+    // уход таймера и «ОТМЕНА» со смазом
+    const gone = clamp((t - (T.recCancel + 0.23)) / 0.08);
+    const otm = $('#otm');
+    otm.style.opacity = fnum(lk * (1 - gone));
+    otm.style.transform = `translateY(${(-10 * (1 - lk)).toFixed(1)}px)`;
+    $('#timer').style.opacity = fnum(1 - gone);
+    for (const id of ['#timer', '#otm']) $(id).style.filter = gone > 0 ? 'url(#hb)' : '';
+    if (gone > 0) setBlur('#hbg', 10 * gone, 0);
+    // подсветка нажатия «ОТМЕНА» — вертикальная полоса во всю высоту поля
+    const hl = t < T.recCancel + 0.1 ? 0 : t < T.recCancel + 0.2 ? 1 : 1 - clamp((t - T.recCancel - 0.2) / 0.1);
+    $('#otmhl').style.opacity = fnum(hl * 0.95);
   }
-  // большой круг записи, замок, пауза, «один раз»
-  const appear = ease((t - T.rec) / 0.16);
-  const gone = canceledK(t);
-  const bigS = recOn ? appear * (1 - gone) : 0;
+
+  // --- большой круг, замок, «один раз», пауза ---
   const bc = $('#bigc');
+  let bigS = 0;
+  if (t >= T.recFade && t < T.recCircleOff + 0.07) {
+    bigS = inCross ? lerp(0.6, 1, ease(crossIn)) : 1;
+    if (t >= T.recCircleOff) bigS = 1 - ease((t - T.recCircleOff) / 0.07);
+  }
   bc.style.display = bigS > 0.01 ? '' : 'none';
-  bc.style.transform = `scale(${bigS.toFixed(3)})`;
-  const lk = clamp((t - T.recLock) / 0.2);
-  $('#bmic').style.opacity = (1 - lk).toFixed(3);
-  $('#bsend').style.opacity = lk.toFixed(3);
-  const lockA = recOn ? ease((t - T.rec - .12) / .15) * (1 - lk) : 0;
-  $('#lock').style.display = lockA > 0.01 ? '' : 'none';
-  $('#lock').style.opacity = lockA.toFixed(3);
-  $('#lock').style.transform = `translateY(${(-lk * 40 + (1 - ease((t - T.rec - .12) / .15)) * 30).toFixed(1)}px)`;
-  const pA = recOn ? ease((t - T.recLock - .05) / .2) * (1 - gone) : 0;
-  for (const id of ['#pause', '#once']) {
-    $(id).style.display = pA > 0.01 ? '' : 'none';
-    $(id).style.opacity = pA.toFixed(3);
-    $(id).style.transform = `scale(${(0.6 + 0.4 * pA).toFixed(3)})`;
+  bc.style.transform = `scale(${fnum(bigS)})`;
+  bc.style.opacity = fnum(inCross ? crossIn : 1);
+  const lk2 = clamp((t - T.recLock) / 0.2);
+  $('#bmic').style.opacity = fnum(1 - lk2);
+  $('#bsend').style.opacity = fnum(lk2);
+  // плашка замка до закрепления
+  const lockIn = ease((t - T.rec - 0.07) / 0.12);
+  const lp = $('#lock');
+  lp.style.display = t >= T.rec && t < T.recLock && lockIn > 0.01 ? '' : 'none';
+  lp.style.opacity = fnum(lockIn);
+  lp.style.transform = `translateY(${((1 - lockIn) * 25).toFixed(1)}px)`;
+  // на закреплении плашка сжимается в кружок и улетает вверх; там замок сменяется на «1»
+  const on = $('#once');
+  const onceVis = t >= T.recLock && t < T.recCircleOff + 0.07;
+  on.style.display = onceVis ? '' : 'none';
+  if (onceVis) {
+    on.style.top = lerp(302, 237, ease((t - T.recLock) / 0.1)).toFixed(1) + 'px';
+    const isLock = t < T.recLock + 0.25;
+    $('#lockIcon').style.display = isLock ? '' : 'none';
+    $('#onceIcon').style.display = isLock ? 'none' : '';
+    on.style.opacity = fnum(t >= T.recCircleOff ? 1 - ease((t - T.recCircleOff) / 0.07) : 1);
+  }
+  // пауза выезжает из кружка вниз со смазом
+  const pa = $('#pause');
+  const pk = clamp((t - (T.recLock + 0.28)) / 0.07);
+  const pauseVis = t >= T.recLock + 0.28 && t < T.recCircleOff + 0.07;
+  pa.style.display = pauseVis ? '' : 'none';
+  if (pauseVis) {
+    pa.style.top = lerp(237, 334, ease(pk)).toFixed(1) + 'px';
+    pa.style.filter = pk < 1 ? 'url(#pb)' : '';
+    setBlur('#pbg', 0, 6 * (1 - pk));
+    pa.style.opacity = fnum(t >= T.recCircleOff ? 1 - ease((t - T.recCircleOff) / 0.07) : 1);
   }
   // подсказка
-  const tipA = clamp((t - T.tooltip[0]) / .08) * (1 - clamp((t - T.tooltip[1]) / .12));
-  $('#tip').style.opacity = tipA.toFixed(3);
+  const tipA = clamp((t - T.tooltip[0]) / .08) * (1 - clamp((t - T.tooltip[1]) / .07));
+  $('#tip').style.opacity = fnum(tipA);
 
-  // --- лента ---
+  // ================= лента =================
   const vis = msgs.filter(m => m.t <= t);
-  msgs.forEach(m => { m.el.style.display = m.t <= t ? '' : 'none'; });
+  msgs.forEach(m => { m.el.style.display = m.t <= t ? '' : 'none'; m.el.style.opacity = ''; });
   vis.forEach((m, i) => {
     const prev = vis[i - 1], next = vis[i + 1];
     m.el.classList.toggle('cont', !!prev && prev.side === m.side);
     m.el.classList.toggle('tailed', !m.sticker && (!next || next.side !== m.side));
-    if (m.side === 'out' && !m.sticker) {
-      let st = 'read';
-      if (m.status === 'pending') st = t < T.m2Delivered ? 'pending' : t < T.m2Read ? 'sent' : 'read';
-      const html = st === 'pending' ? CLOCK('#a8a596') : st === 'sent' ? CHECK1('#a8a596') : CHECK2('#d2ac2f');
+    if (m.status === 'pending') {
+      const st = t < T.m2Delivered ? 'pending' : t < T.m2Read ? 'sent' : 'read';
       const el = m.el.querySelector('.st');
-      if (el.dataset.k !== st) { el.innerHTML = html; el.dataset.k = st; }
+      if (el.dataset.k !== st) {
+        el.innerHTML = st === 'pending' ? CLOCK('#bdb69a') : st === 'sent' ? CHECK1('#bdb69a') : CHECK2('#d2ac2f');
+        el.dataset.k = st;
+      }
     }
   });
-  // сдвиг ленты: новое сообщение «въезжает» снизу
+  // новый пузырь появляется одним кадром на 3-м кадре события; до этого лента чуть «тянется»
   const list = $('#list');
-  list.style.transform = '';
   let off = 0;
   vis.forEach(m => {
     if (m.t < 0) return;
-    const p = (t - m.t) / 0.2;
-    if (p >= 1) return;
-    off += (m.el.offsetHeight + parseFloat(getComputedStyle(m.el).marginTop)) * (1 - ease(p));
+    const n = Math.floor((t - m.t) / FR + 1e-6);
+    if (n < 2) {
+      off += m.el.offsetHeight + parseFloat(getComputedStyle(m.el).marginTop) - 3 * (n + 1);
+      m.el.style.opacity = '0';
+    }
   });
   list.style.transform = off ? `translateY(${off.toFixed(2)}px)` : '';
+  // рывок: вертикальный смаз области чата
+  const pv = punchAt(t);
+  $('#chatwrap').style.filter = pv > 0 ? 'url(#vb)' : '';
+  setBlur('#vbg', 0, pv);
+  // смаз нижней панели: кроссфейд записи и отправка сообщения
+  let barB = 0;
+  for (const e of SENDS) { const n = Math.floor((t - e) / FR + 1e-6); if (n >= 0 && n < 2) barB = n === 0 ? 2.2 : 1.6; }
+  if (inCross) barB = Math.max(barB, 4 * Math.sin(crossIn * Math.PI));
+  $('#bar').style.filter = barB > 0.05 ? 'url(#bb)' : '';
+  setBlur('#bbg', barB, barB * 0.6);
 
-  // --- «рывок» на каждое сообщение: зум + смаз только области чата ---
-  let a = 0;
-  for (const e of PUNCH) {
-    const d = t - e;
-    if (d < 0 || d > 0.32) continue;
-    a = Math.max(a, d < 0.08 ? d / 0.08 : 1 - (d - 0.08) / 0.24);
-  }
-  a = clamp(a);
-  const cw = $('#chatwrap');
-  cw.style.transform = a ? `scale(${(1 + 0.11 * a).toFixed(4)})` : '';
-  $('#mbg').setAttribute('stdDeviation', `${(9 * a).toFixed(2)} ${(4 * a).toFixed(2)}`);
-  cw.style.filter = a > 0.01 ? 'url(#mb)' : '';
-
-  // --- камера: финальный наезд на два последних сообщения ---
+  // ================= камера: финальный наезд =================
   const ph = $('#phone');
   let z = 1, tx = 0, ty = 0;
   if (t >= T.zoom) {
-    const m7 = msgs[7].el.querySelector('.b'), m8 = msgs[8].el.querySelector('.b');
-    // позиция в координатах телефона (без трансформаций камеры)
     ph.style.transform = `scaleX(${SX})`;
     const pr = ph.getBoundingClientRect();
-    const r7 = m7.getBoundingClientRect(), r8 = m8.getBoundingClientRect();
+    const r7 = msgs[7].el.querySelector('.b').getBoundingClientRect(), r8 = msgs[8].el.querySelector('.b').getBoundingClientRect();
     const toP = (x, y) => ({ x: (x - pr.left) / SX, y: y - pr.top });
     const L = toP(Math.min(r7.left, r8.left), r7.top), R = toP(Math.max(r7.right, r8.right), r8.bottom);
-    const P = { x: L.x + (R.x - L.x) * 0.42, y: (L.y + R.y) / 2 };
+    const P = { x: L.x + (R.x - L.x) * 0.40, y: (L.y + R.y) / 2 };
     const S0 = { x: P.x * SX, y: P.y };
-    let Z, F;
-    if (t < T.glitch) {
-      const k = easeIO((t - T.zoom) / (T.glitch - T.zoom));
-      Z = 1 + 0.5 * k; F = { x: lerp(S0.x, 250, k), y: lerp(S0.y, 330, k) };
-    } else {
-      // во время глитча — рывками крупнее, с дрожанием
-      const step = Math.floor((t - T.glitch) / 0.05);
-      const big = t >= T.glitch + 0.4;
-      const j = ((step * 7919) % 13) / 13 - 0.5;
-      Z = big ? 2.2 + 0.08 * j : 1.62 + 0.04 * j;
-      F = { x: (big ? 262 : 255) + 14 * j, y: (big ? 300 : 320) + 8 * j };
-    }
-    z = Z; tx = F.x - P.x * SX * Z; ty = F.y - P.y * Z;
-    // камера не выходит за край экрана телефона
-    tx = clamp(tx, 576 - 678 * SX * z, 0); ty = clamp(ty, 576 - 576 * z, 0);
+    z = zoomAt(t);
+    const k = clamp((z - 1) / 1.42);
+    const step = Math.floor((t - T.zoom) / 0.05);
+    const j = t >= T.glitch ? (((step * 7919) % 13) / 13 - 0.5) : 0;
+    z += 0.02 * j;
+    const F = { x: lerp(S0.x, 240, Math.min(1, k * 1.6)) + 8 * j, y: lerp(S0.y, 300, Math.min(1, k * 1.6)) + 5 * j };
+    tx = F.x - P.x * SX * z; ty = F.y - P.y * z;
+    tx = clamp(tx, 576 - 764 * SX * z, 0); ty = clamp(ty, 576 - 576 * z, 0);
   }
   ph.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${(z * SX).toFixed(5)}, ${z.toFixed(5)})`;
   return true;
 };
-function canceledK(t) { return clamp((t - T.recCancel) / 0.27); }
 
 build();
 window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; }))])
-  .then(() => { render(0); return true; });
+  .then(() => { sizeSpacers(); render(0); return true; });
 </script>
 </body>
 </html>

@@ -131,7 +131,7 @@ bass = np.zeros(N)
 voc = np.zeros(N)
 nb = int(np.ceil(DUR / BAR)) + 1
 for b in range(nb):
-    t0 = b * BAR - 0.9          # музыка «уже идёт» на первом кадре
+    t0 = b * BAR - BAR + 0.05    # музыка «уже идёт» на первом кадре, аккорд на первом кадре
     root, ch = CHORDS[b % 4]
     place(pads, pad(ch[:3], BAR), t0)
     place(keys, piano(ch[0] - 12, BAR * .9, .55, .5), t0)
@@ -177,7 +177,9 @@ gl = np.repeat(gl[::hold], hold)[: g1 - g0]                # понижение 
 noise = fft_filter(rng.normal(0, 1, g1 - g0), lo=1800, hi=9000) * 0.09
 gate = (np.floor(np.arange(g1 - g0) / chunk) % 2 == 0) * 0.9 + 0.1
 music[g0:g1] = gl * 1.1 + noise * gate
-music[g1:] = 0
+# под чёрным музыка продолжается и затухает (как в референсе)
+tail = np.clip((DUR - 0.05 - t) / 0.55, 0, 1) ** 1.5
+music[g1:] *= 0.8 * tail[g1:]
 
 # ---------- тихие звуки интерфейса ----------
 sfx = np.zeros(N)
