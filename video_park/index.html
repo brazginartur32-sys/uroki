@@ -120,7 +120,7 @@ const VIDEO_PIC = `<svg class="pic" width="440" height="300" viewBox="0 0 440 30
 const msgs = S.messages.map(m => ({ ...m }));
 const EVENTS = msgs.filter(m => m.t > 0).map(m => m.t);
 const SENDS = msgs.filter(m => m.t > 0 && m.side === 'out' && m.type).map(m => m.t);
-window.MSGS = msgs.map(m => ({ t: m.t, side: m.side, kind: m.sticker ? 'sticker' : m.video ? 'video' : 'text' }));
+window.MSGS = msgs.map(m => ({ t: m.t, side: m.side, kind: m.sticker ? 'sticker' : m.video ? 'video' : 'text', hit: m.hit || 0 }));
 
 function build() {
   const list = $('#list');
@@ -181,6 +181,25 @@ function punchAt(t) {
   for (const e of EVENTS) { const n = Math.floor((t - e) / FR + 1e-6); if (n >= 0 && n < PUNCH_PROFILE.length) v = Math.max(v, PUNCH_PROFILE[n]); }
   return v;
 }
+// ---------- «экран тухнет с каждым сообщением» — с умом ----------
+// Темнеет окружение (фон и края), старые сообщения уходят в тень; новые и поле ввода остаются читаемыми.
+const AFTER = msgs.filter(m => m.t > T.tvOn).map(m => m.t);
+function moodAt(t) {
+  let m = 0;
+  for (const e of AFTER) m += ease((t - e) / 0.6) / AFTER.length;   // плавная ступень на каждом сообщении, без «миганий»
+  return m;
+}
+const WALL = [[0, [211, 221, 233]], [0.3, [128, 142, 168]], [0.65, [52, 62, 98]], [1, [16, 20, 54]]];
+function wallAt(m) {
+  for (let i = 1; i < WALL.length; i++) if (m <= WALL[i][0]) {
+    const [a, ca] = WALL[i - 1], [b, cb] = WALL[i], k = (m - a) / (b - a);
+    return ca.map((v, j) => v + (cb[j] - v) * k);
+  }
+  return WALL[WALL.length - 1][1];
+}
+const AGE_DIM = [0.05, 0.08, 0.14, 0.22, 0.30, 0.37, 0.40];
+const rgb = c => `rgb(${c.map(v => Math.round(v)).join(',')})`;
+
 function setBlur(id, x, y) { $(id).setAttribute('stdDeviation', `${x.toFixed(2)} ${y.toFixed(2)}`); }
 
 let lastTxt = null;
@@ -230,6 +249,17 @@ window.render = function (t) {
       if (el.dataset.k !== k) { el.innerHTML = read ? CHECK2('#e0c87d') : CHECK1('#bdb69a'); el.dataset.k = k; }
     }
   });
+  // --- настроение ---
+  const md = moodAt(t);
+  const wc = wallAt(md), edge = wc.map(v => v * (1 - 0.72 * md));
+  $('#phone').style.background = md > 0.001
+    ? `radial-gradient(ellipse 85% 75% at 50% 74%, ${rgb(wc)} 0%, ${rgb(wc)} 30%, ${rgb(edge)} 100%)` : '';
+  vis.forEach((m, i) => {
+    const age = vis.length - 1 - i;
+    const b = 1 - md * AGE_DIM[Math.min(age, AGE_DIM.length - 1)];
+    m.el.style.filter = b < 0.999 ? `brightness(${b.toFixed(3)})` : '';
+  });
+
   const list = $('#list');
   let off = 0;
   vis.forEach(m => {
@@ -242,11 +272,11 @@ window.render = function (t) {
   });
   list.style.transform = off ? `translateY(${off.toFixed(2)}px)` : '';
   const pv = punchAt(t);
-  $('#chatwrap').style.filter = pv > 0 ? 'url(#vb)' : '';
+  $('#chatwrap').style.filter = ((pv > 0 ? 'url(#vb) ' : '') + (md > 0.001 ? `saturate(${(1 - 0.45 * md).toFixed(3)})` : '')).trim();
   setBlur('#vbg', 0, pv);
   let barB = 0;
   for (const e of SENDS) { const n = Math.floor((t - e) / FR + 1e-6); if (n >= 0 && n < 2) barB = n === 0 ? 2.2 : 1.6; }
-  $('#bar').style.filter = barB ? 'url(#bb)' : '';
+  $('#bar').style.filter = ((barB ? 'url(#bb) ' : '') + (md > 0.001 ? `brightness(${(1 - 0.12 * md).toFixed(3)})` : '')).trim();
   setBlur('#bbg', barB, barB * 0.6);
 
   // --- камера: медленный наезд на последнее сообщение ---
@@ -265,6 +295,16 @@ window.render = function (t) {
   }
   ph.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${(z * SX).toFixed(5)}, ${z.toFixed(5)})`;
   return true;
+};
+
+// раскладка для проверки читаемости: прямоугольники видимых текстовых пузырей (новые первыми)
+window.layoutAt = function (t) {
+  render(t);
+  const vis = msgs.filter(m => m.t <= t && !m.sticker && !m.video);
+  return vis.slice(-7).reverse().map((m, age) => {
+    const r = m.el.querySelector('.b').getBoundingClientRect();
+    return { i: msgs.indexOf(m), age, t0: m.t, x: r.left, y: r.top, w: r.width, h: r.height };
+  }).filter(r => r.y + r.h > 8 && r.y < 455 && r.w > 0);
 };
 
 build();

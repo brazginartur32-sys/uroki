@@ -136,7 +136,7 @@ def impact(gain):
     L = int(1.6 * SR)
     tt = np.arange(L) / SR
     boom = np.sin(2 * np.pi * np.cumsum(30 + 90 * np.exp(-tt * 9)) / SR) * np.exp(-tt * 2.5)
-    crack = fft_filter(rng.normal(0, 1, L), lo=800, hi=6000) * np.exp(-tt * 18) * 0.25
+    crack = fft_filter(rng.normal(0, 1, L), lo=600, hi=3500) * np.exp(-tt * 22) * 0.12   # мягче, без резкого треска
     return (boom + crack) * gain
 
 
@@ -159,7 +159,7 @@ for j, x in enumerate(out_msgs):
 fin0 = out_msgs[-2]['t']
 L = int((T['black'] - fin0) * SR)
 tt = np.arange(L) / SR
-ring = np.sin(2 * np.pi * np.cumsum(1800 + 2600 * (tt / tt[-1]) ** 2) / SR) * (tt / tt[-1]) ** 2 * 0.12
+ring = np.sin(2 * np.pi * np.cumsum(520 + 380 * (tt / tt[-1]) ** 2) / SR) * (tt / tt[-1]) ** 2 * 0.06   # низкий тянущийся тон вместо пронзительного писка
 place(dark, ring, fin0)
 
 dark = reverb(dark, length=3.5, decay=1.2, mix=0.35, seed=3)
@@ -199,7 +199,7 @@ mix = light + tv + dark + sfx
 b0 = int(T['black'] * SR)
 mix[b0:] = 0
 tt = np.arange(N - b0) / SR
-mix[b0:] += np.sin(2 * np.pi * 4200 * tt) * 0.012 * np.exp(-tt / 0.9) * np.minimum(1, tt / 0.15)
+mix[b0:] += np.sin(2 * np.pi * 1100 * tt) * 0.006 * np.exp(-tt / 0.8) * np.minimum(1, tt / 0.2)   # тихий звон в ушах
 
 st = np.stack([mix, np.roll(mix, int(0.0006 * SR))], 1)
 st = np.tanh(st / 0.85) * 0.85

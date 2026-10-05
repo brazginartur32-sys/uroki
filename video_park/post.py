@@ -1,8 +1,12 @@
-"""Постобработка: монтаж как в «Чья будете» (20 fps внутри 30, «перезалив»), плюс:
-- «Спустя час»: телевизор выключается в полоску, снег-помехи с дёрганым текстом, включается обратно;
-- после этого экран гаснет с каждым сообщением (яркость, цвет, виньетка), появляются блики;
-- после «Я не понимаю...» экран почти тёмный, блики очень сильные;
-- в конце — резкая темнота.
+"""Постобработка (безопасная для светочувствительных зрителей):
+- монтаж как в «Чья будете»: 20 fps внутри 30, «перезалив» в 576p;
+- «Спустя час»: картинка сжимается в полосу поверх мягких помех (без чёрных провалов),
+  ровный подрагивающий текст (без мигания), обратное раскрытие;
+- глитч-удары в стиле референса (цветовой сдвиг голубой / маджента / синий, разрывы строк,
+  расслоение каналов, рваный текст), но БЕЗ скачков яркости: средняя яркость кадра сохраняется;
+- резкая темнота в конце (один переход).
+Затемнение «с каждым сообщением» делается в index.html: темнеет фон и края, старые сообщения уходят в тень,
+новые остаются читаемыми.
 
 python3 post.py frames timeline.json out_noaudio.mp4
 """
@@ -24,8 +28,9 @@ files = sorted(FRAMES.glob('*.jpg'))
 YY, XX = np.mgrid[0:H, 0:W].astype(np.float32)
 FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf'
 
-msg_times = [m['t'] for m in TL['msgs'] if m['t'] > 0]
-after_tv = [t for t in msg_times if t > T['tvOn']]
+HITS = [(m['t'], m['hit']) for m in TL['msgs'] if m.get('hit')] + [(h['t'], h['s']) for h in TL.get('extraHits', [])]
+HITS.sort()
+PALETTE = [(103, 231, 237), (219, 140, 213), (76, 141, 200), (28, 20, 225)]   # голубой, маджента, стальной, ультрамарин
 
 
 def load(i):
@@ -40,154 +45,151 @@ def blur(a, r):
     return np.asarray(im.filter(ImageFilter.GaussianBlur(float(r))), dtype=np.float32) / 255
 
 
-def rgb_split(a, dx, dy=0):
-    dx, dy = int(dx), int(dy)
+def hblur(a, r):
+    r = int(r)
+    if r < 1:
+        return a
+    c = np.cumsum(np.pad(a, ((0, 0), (r + 1, r), (0, 0)), mode='edge'), axis=1)
+    return (c[:, 2 * r + 1:] - c[:, :-2 * r - 1]) / (2 * r + 1)
+
+
+def to_lin(a):
+    a = np.clip(a, 0, 1)
+    return np.where(a <= 0.04045, a / 12.92, ((a + 0.055) / 1.055) ** 2.4)
+
+
+def to_srgb(l):
+    l = np.clip(l, 0, 1)
+    return np.where(l <= 0.0031308, l * 12.92, 1.055 * l ** (1 / 2.4) - 0.055)
+
+
+def Ylin(l):
+    return l[..., 0] * 0.2126 + l[..., 1] * 0.7152 + l[..., 2] * 0.0722
+
+
+def rgb_split(a, dx):
+    dx = int(round(dx))
+    if dx == 0:
+        return a
     out = a.copy()
-    out[..., 0] = np.roll(np.roll(a[..., 0], -dx, axis=1), -dy, axis=0)
-    out[..., 2] = np.roll(np.roll(a[..., 2], dx, axis=1), dy, axis=0)
+    out[..., 0] = np.roll(a[..., 0], -dx, axis=1)
+    out[..., 2] = np.roll(a[..., 2], dx, axis=1)
     return out
 
 
-def lum(a):
-    return a[..., 0] * .299 + a[..., 1] * .587 + a[..., 2] * .114
-
-
-# ---------------- «Спустя час»: телевизионные помехи ----------------
-def tv_text_layer(t, rng):
-    img = Image.new('RGB', (W, H), (0, 0, 0))
-    d = ImageDraw.Draw(img)
-    f = ImageFont.truetype(FONT, 124)
-    txt = 'СПУСТЯ ЧАС...'
-    w = d.textlength(txt, font=f)
-    jx = rng.integers(-14, 15) + (rng.random() < 0.15) * rng.integers(-60, 61)
-    jy = rng.integers(-8, 9)
-    d.text(((W - w) / 2 + jx, H / 2 - 60 + jy), txt, font=f, fill=(255, 255, 255))
-    a = np.asarray(img, dtype=np.float32) / 255
-    # рваные строки и сдвиг каналов
-    for _ in range(rng.integers(2, 6)):
-        y = rng.integers(int(H / 2 - 80), int(H / 2 + 60))
-        h = rng.integers(4, 18)
-        a[y:y + h] = np.roll(a[y:y + h], int(rng.integers(-50, 51)), axis=1)
-    return rgb_split(a, rng.integers(3, 10))
-
-
+# ---------------- «Спустя час»: мягкие помехи ----------------
 def tv_static(t, i):
     rng = np.random.default_rng(i * 7 + 1)
-    n = rng.random((H // 3, W // 3)).astype(np.float32)
-    n = np.repeat(np.repeat(n, 3, 0), 3, 1)
-    # горизонтальная катящаяся полоса и строки
-    roll = ((YY - (t * 700) % (H + 300) + 150) / 120.0)
-    band = np.exp(-roll ** 2) * 0.35
-    scan = 0.85 + 0.15 * np.sin(YY * np.pi / 3)
-    g = (n * 0.75 + band) * scan
-    a = np.repeat(g[..., None], 3, 2) * np.array([0.92, 0.95, 1.0])
-    # дёрганый текст, мерцает
-    if rng.random() > 0.12:
-        txt = tv_text_layer(t, rng)
-        a = a * (1 - lum(txt)[..., None] * 0.85) + txt * 0.95
-    # срыв синхронизации: кадр иногда «прыгает» по вертикали
-    if rng.random() < 0.2:
-        a = np.roll(a, int(rng.integers(-120, 120)), axis=0)
-    return np.clip(a, 0, 1)
+    n = rng.random((H // 4, W // 4)).astype(np.float32)
+    n = np.repeat(np.repeat(n, 4, 0), 4, 1)
+    n = blur(np.repeat(n[..., None], 3, 2), 1.2)[..., 0]
+    g = 0.40 + (n - 0.5) * 0.40                                        # невысокий контраст
+    band = np.exp(-(((YY - (t * 420) % (H + 300) + 150) / 140.0) ** 2)) * 0.06
+    scan = 1 + 0.03 * np.sin(YY * np.pi / 4)
+    g = (g + band) * scan
+    return np.repeat(g[..., None], 3, 2) * np.array([0.95, 0.97, 1.0])
 
 
-def crt_off(a, k):
-    """кадр сжимается в яркую полосу, потом в точку (k: 0→1)"""
-    out = np.zeros_like(a)
-    if k < 0.7:
-        h = max(4, int(H * (1 - k / 0.7) ** 2))
-        small = np.asarray(Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).resize((W, h)), dtype=np.float32) / 255
-        small = small * (1 + 2.5 * k) + 0.4 * k
-        y0 = (H - h) // 2
-        out[y0:y0 + h] = np.clip(small, 0, 1)
-    else:
-        r = (1 - (k - 0.7) / 0.3) * 60 + 2
-        out += np.exp(-((XX - W / 2) ** 2 / (r * 8) ** 2 + (YY - H / 2) ** 2 / r ** 2))[..., None]
+def tv_text(a, step):
+    rng = np.random.default_rng(step * 13 + 5)
+    img = Image.new('L', (W, H), 0)
+    d = ImageDraw.Draw(img)
+    f = ImageFont.truetype(FONT, 118)
+    txt = 'СПУСТЯ ЧАС...'
+    w = d.textlength(txt, font=f)
+    jx, jy = rng.integers(-4, 5), rng.integers(-3, 4)
+    d.text(((W - w) / 2 + jx, H / 2 - 66 + jy), txt, font=f, fill=255)
+    m = np.asarray(img, dtype=np.float32)[..., None] / 255
+    col = np.ones((H, W, 3), np.float32) * np.array([0.96, 0.96, 0.98])
+    lay = rgb_split(m.repeat(3, 2), 4) * col
+    if step % 9 == 4:                                                  # редкий разрыв строки
+        y = int(H / 2 - 40 + rng.integers(0, 60))
+        lay[y:y + 26] = np.roll(lay[y:y + 26], int(rng.choice([-18, 18])), axis=1)
+    mask = np.clip(lay.max(2, keepdims=True), 0, 1)
+    return a * (1 - mask * 0.9) + lay * 0.9
+
+
+def squeeze(frame, bg, k):
+    """кадр сжимается к центральной полосе (k=0 — целый, k=1 — исчез) поверх помех, без чёрного"""
+    h = int(H * (1 - min(1.0, max(0.0, k))) ** 1.6)
+    if h < 3:
+        return bg
+    small = np.asarray(Image.fromarray((np.clip(frame, 0, 1) * 255).astype(np.uint8)).resize((W, h)), dtype=np.float32) / 255
+    out = bg.copy()
+    y0 = (H - h) // 2
+    out[y0:y0 + h] = small
     return out
 
 
-# ---------------- затухание и глитч-блики (как в референсе «Чья будете») ----------------
-import glitchlib as G
-
-LEVELS = [0.95, 0.91, 0.86, 0.80, 0.75, 0.70, 0.65, 0.60, 0.56, 0.52, 0.52]   # после каждого сообщения
-
-
-def darkness(t):
-    """яркость экрана: ступеньками на каждом сообщении, с коротким провалом в момент сообщения"""
-    if t < T['tvOn']:
-        return 1.0
-    lv = LEVELS[0]
-    for j, e in enumerate(after_tv):
-        if t >= e:
-            prev, nxt = LEVELS[j], LEVELS[min(j + 1, len(LEVELS) - 1)]
-            p = (t - e) / 0.3
-            if p < 1:
-                dip = 0.5 * np.sin(np.pi * min(1, p * 2))
-                lv = (prev + (nxt - prev) * min(1, p * 1.5)) * (1 - 0.3 * dip)
-            else:
-                lv = nxt
-    return lv
+# ---------------- глитч-удар без скачка яркости ----------------
+def colorize_keep_luma(a, color, amount):
+    """перекрашивает в цвет, сохраняя яркость каждого пикселя (светлые пузыри остаются светлыми)"""
+    L = to_lin(a)
+    Y = Ylin(L)[..., None]
+    c = to_lin(np.array(color, np.float32) / 255)
+    yc = float(c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722)
+    tint = c[None, None, :] * (Y / yc)                                 # та же яркость, другой цвет
+    ratio = c / yc
+    lim = np.where(ratio > 1, (1 - Y) / (np.maximum(Y, 1e-4) * (ratio - 1 + 1e-6)), 1.0)
+    m = np.clip(np.minimum(lim.min(2, keepdims=True), amount), 0, amount)
+    out = Y * (1 - m) + tint * m
+    return to_srgb(out)
 
 
-def grade(a, t):
-    lv = darkness(t)
-    gone = float(np.clip((t - T['tvOn']) / (T['black'] - T['tvOn']), 0, 1))
-    L = lum(a)[..., None]
-    a = L + (a - L) * (1 - 0.6 * gone)
-    a = a * np.array([1 - 0.12 * gone, 1 - 0.05 * gone, 1 + 0.04 * gone])
-    a = a * lv
-    rr = ((XX - W / 2) ** 2 + (YY - H * 0.55) ** 2) / (W * W)
-    vig = np.exp(-rr * (0.5 + 2.5 * gone))
-    return a * (0.35 + 0.65 * vig)[..., None]
-
-
-# Кадры глитча референса (шаг 1/20 с). Порядок взят из конца референса.
-SEQ = [1, 4, 5, 9, 3, 8, 11, 6, 14, 18, 12, 10, 16, 13, 19, 21]
-BLUE_READ = [(22, 54, 187), (25, 18, 203), (43, 120, 191), (28, 20, 225), (25, 18, 203), (7, 5, 245)]
-
-hits = after_tv[2:]                 # с «Зачем?...»
-FINAL_ME = after_tv[-2]             # «Я не понимаю...»
-FINAL = after_tv[-1]                # «Просто потому, что это весело»
-
-
-def glitch_kind(t):
-    """что показать в этом 20-кадровом шаге: None — обычный кадр; ('g', k) — кадр глитча; ('blue', i) — читаемый синий"""
-    step = int(round(t * 20))
-    if t >= FINAL:
-        # финал как в конце референса: синий кадр с белыми пузырями и чёрным жирным текстом,
-        # изредка — вспышка
-        d = t - FINAL
-        if d < 0.1:
-            return ('g', 1)
-        if step % 7 == 3:
-            return ('g', [5, 18, 13][step % 3])
-        return ('blue', step % len(BLUE_READ))
-    if t >= FINAL_ME:
-        d = t - FINAL_ME
-        if d < 0.15:
-            return ('g', SEQ[step % len(SEQ)])
-        # между ними — то сильный глитч, то обычный тёмный кадр
-        return ('g', SEQ[step % len(SEQ)]) if step % 5 in (0, 2, 3) else None
-    for j, e in enumerate(hits[:-2]):
-        n = 1 + j                          # с каждым сообщением глитч длиннее
-        if e <= t < e + n * 0.05 + 1e-6:
-            return ('g', SEQ[(int(round((t - e) * 20)) + j * 3) % len(SEQ)])
-    return None
-
-
-def apply_glitch(raw, t, base):
-    kind = glitch_kind(t)
-    if kind is None:
-        return base
-    if kind[0] == 'blue':
-        out = G.g_blue(raw, G.c(BLUE_READ[kind[1]]), 300 + int(t * 20), smear_lines=False)
-        return out
-    k = kind[1]
-    out = G.glitch(raw, k, G.zoom_grade(raw, 1.0, 1.0))
-    # до финала глитч тоже немного притушен вместе с экраном
-    if t < FINAL:
-        out = out * (0.55 + 0.45 * darkness(t))
+def slices(a, rng, strength):
+    out = a.copy()
+    for _ in range(3 + int(4 * strength)):
+        y = int(rng.integers(0, H - 70))
+        h = int(rng.integers(8, 64))
+        dx = int(rng.integers(15, 15 + int(60 * strength) + 1)) * int(rng.choice([-1, 1]))
+        out[y:y + h] = np.roll(out[y:y + h], dx, axis=1)
     return out
+
+
+def torn_text(a, rng):
+    L = a[..., 0] * .299 + a[..., 1] * .587 + a[..., 2] * .114
+    d = (L < 0.3).astype(np.float32)
+    for _ in range(10):
+        y = int(rng.integers(0, H - 20))
+        d[y:y + int(rng.integers(4, 18))] *= 0.2
+    d = hblur(d[..., None].repeat(3, 2), 10)[..., :1]
+    mag = np.array([0.86, 0.55, 0.84], np.float32)
+    return a * (1 - d * 0.6) + mag * d * 0.6
+
+
+def keep_mean(src, out):
+    """выравнивает среднюю яркость (в линейном свете) по 9 зонам, чтобы не было вспышки"""
+    Ls, Lo = to_lin(src), to_lin(out)
+    res = Lo.copy()
+    for y0 in range(0, H, H // 3):
+        for x0 in range(0, W, W // 3):
+            sl = (slice(y0, y0 + H // 3), slice(x0, x0 + W // 3))
+            ys, yo = Ylin(Ls[sl]).mean(), Ylin(Lo[sl]).mean()
+            if yo > 1e-4:
+                res[sl] = Lo[sl] * min(1.6, ys / yo)
+    return to_srgb(res)
+
+
+def hit_at(t):
+    """(сила, номер удара, шаг) — удар длится 3 шага по 1/20 с, начиная с появления сообщения"""
+    for j, (h, s) in enumerate(HITS):
+        n = int(round((t - h) * 20)) - 1
+        if 0 <= n < 3:
+            return s * (1.0, 0.6, 0.3)[n], j, n
+    return 0.0, -1, -1
+
+
+def glitch_hit(a, t):
+    s, j, n = hit_at(t)
+    if s <= 0:
+        return a
+    rng = np.random.default_rng(j * 31 + n)
+    out = colorize_keep_luma(a, PALETTE[j % len(PALETTE)], 0.85 * min(1, s + 0.2))
+    out = slices(out, rng, s)
+    if n == 0 and s >= 0.7:
+        out = torn_text(out, rng)
+    out = rgb_split(out, 3 + 7 * s)
+    return keep_mean(a, out)
 
 
 # ---------------- главный цикл ----------------
@@ -196,11 +198,13 @@ ff = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fm
                        '-c:v', 'libx264', '-preset', 'medium', '-crf', '12', '-pix_fmt', 'yuv420p', str(tmp)], stdin=subprocess.PIPE)
 nframes = int(round(TL['duration'] * FPS))
 grain_rng = np.random.default_rng(5)
+SQ = 0.3          # длительность сжатия/раскрытия картинки
 cache = {}
 for i in range(nframes):
     t = i / FPS
     t20 = np.floor(t * 20 + 0.5 + 1e-6) / 20
     src = int(round(t20 * FPS))
+    step = int(round(t20 * 20))
     if t20 >= T['black']:
         a = np.zeros((H, W, 3), np.float32)
     elif src in cache:
@@ -209,18 +213,20 @@ for i in range(nframes):
         a = load(src)
         if t20 < T['fadeIn'][1]:
             a = a * (t20 / T['fadeIn'][1])
-        if T['tvOff'] <= t20 < T['tvOff'] + 0.2:
-            a = crt_off(a, (t20 - T['tvOff']) / 0.2)
-        elif T['tvOff'] + 0.2 <= t20 < T['tvOn'] - 0.25:
-            a = tv_static(t20, src)
-        elif T['tvOn'] - 0.25 <= t20 < T['tvOn']:
-            # включение: кадр раскрывается из полосы сквозь снег
-            k = (t20 - (T['tvOn'] - 0.25)) / 0.25
-            a = crt_off(grade(a, T['tvOn']), 1 - k) * 0.7 + tv_static(t20, src) * 0.3 * (1 - k)
+        if T['tvOff'] <= t20 < T['tvOn']:
+            st = tv_static(t20, step)
+            if t20 < T['tvOff'] + SQ:                                   # картинку «засасывает» в помехи
+                k = (t20 - T['tvOff']) / SQ
+                a = squeeze(a, st * min(1, 0.4 + k), k)
+            elif t20 >= T['tvOn'] - SQ:                                 # картинка раскрывается обратно
+                k = (T['tvOn'] - t20) / SQ
+                a = squeeze(load(int(round(T['tvOn'] * FPS))), st, k)
+            else:
+                a = tv_text(st, step)
         else:
-            raw = a
-            a = apply_glitch(raw, t20, grade(raw, t20))
-            a = a + grain_rng.normal(0, 0.012, (H, W, 1)).astype(np.float32)
+            a = glitch_hit(a, t20)
+            if t20 > T['tvOn']:
+                a = a + grain_rng.normal(0, 0.008, (H, W, 1)).astype(np.float32)
         cache = {src: a}
     ff.stdin.write((np.clip(a, 0, 1) * 255).astype(np.uint8).tobytes())
     if i % 90 == 0:
@@ -231,8 +237,8 @@ ff.wait()
 # «перезалив», как в «Чья будете»
 low = Path(OUT).with_suffix('.low.mp4')
 subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(tmp),
-                '-vf', 'scale=576:576:flags=bilinear,gblur=sigma=0.7,unsharp=5:5:0.8:5:5:1.5,chromashift=cbv=1:crv=-1,noise=alls=2:allf=t',
-                '-c:v', 'libx264', '-preset', 'medium', '-crf', '27', '-pix_fmt', 'yuv420p', str(low)], check=True)
+                '-vf', 'scale=576:576:flags=bilinear,gblur=sigma=0.6,unsharp=5:5:0.7:5:5:1.2,chromashift=cbv=1:crv=-1,noise=alls=2:allf=t',
+                '-c:v', 'libx264', '-preset', 'medium', '-crf', '26', '-pix_fmt', 'yuv420p', str(low)], check=True)
 subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(low), '-vf', 'scale=1080:1080:flags=bicubic',
                 '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p',
                 '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', OUT], check=True)

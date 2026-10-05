@@ -25,8 +25,12 @@ const SCALE = 1080 / 576;
       await page.evaluate(t => window.render(t), t);
       await page.screenshot({ path: path.join(dir, `t_${t.toFixed(2)}.png`) });
     }
+  } else if (args[0] === '--layout') {
+    const out = [];
+    for (let t = 0; t < duration; t += 0.05) out.push({ t: +t.toFixed(3), rects: await page.evaluate(t => window.layoutAt(t), t) });
+    fs.writeFileSync(path.join(__dirname, 'layout.json'), JSON.stringify(out));
   } else if (args[0] === '--timeline') {
-    const data = await page.evaluate(() => ({ keys: window.KEYS, msgs: window.MSGS, t: window.SCENE.t, duration: window.SCENE.duration }));
+    const data = await page.evaluate(() => ({ keys: window.KEYS, msgs: window.MSGS, t: window.SCENE.t, duration: window.SCENE.duration, extraHits: window.SCENE.extraHits || [] }));
     fs.writeFileSync(path.join(__dirname, 'timeline.json'), JSON.stringify(data, null, 1));
   } else {
     const dir = path.join(__dirname, args[0] || 'frames');
