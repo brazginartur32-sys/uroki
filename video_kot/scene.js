@@ -13,7 +13,7 @@ window.SCENE = {
   M4: 'деточка а вы чья будете?',
   M5: 'ба ты чего',                   // после отмены голосового
   // опечатка в последнем слове, клавиатура исправляет одним кадром (как «посему» -> «почему?» в референсе)
-  M6: { typo: 'это я фня', final: 'это я аня' },
+  M6: { typo: 'это я пня', final: 'это я аня' },   // «п» соседняя с «а»
   M7: 'что вы милая',
   M8: 'моей ане шесть',
 
@@ -21,10 +21,10 @@ window.SCENE = {
   t: {
     fadeIn: [0, 1.1],
     m2Type: [-0.25, 1.17], m2Send: 1.33, m2Delivered: 2.0, m2Read: 2.4,
-    tooltip: [1.72, 2.23],
-    recFade: 2.10, rec: 2.2, recLock: 3.15, recStop: 10.2, recCancel: 10.30, recGone: 10.62, recCircleOff: 10.93, recSpeed: 2,
+    tooltip: [1.70, 2.18],
+    recFade: 2.07, rec: 2.17, recTimer: 2.2333, recLock: 3.117, recStop: 10.2333, recCancel: 10.30, recGone: 10.62, recCircleOff: 10.93, recSpeed: 2,
     m3: 5.5, m4: 9.53,
-    m5Type: [11.0, 11.4], m5Send: 11.53,
+    m5Type: [10.97, 11.4], m5Send: 11.53,
     m6Type: [11.70, 11.93], m6Fix: 12.20, m6Send: 12.4,
     m7: 14.33, m8: 16.8,
     zoom: 18.15, glitch: 19.2, black: 20.3,
