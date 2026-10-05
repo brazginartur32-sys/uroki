@@ -106,103 +106,88 @@ def crt_off(a, k):
     return out
 
 
-# ---------------- затухание и блики ----------------
-LEVELS = [0.93, 0.88, 0.81, 0.73, 0.66, 0.59, 0.52, 0.45, 0.39, 0.27, 0.30]   # после каждого сообщения
+# ---------------- затухание и глитч-блики (как в референсе «Чья будете») ----------------
+import glitchlib as G
+
+LEVELS = [0.95, 0.91, 0.86, 0.80, 0.75, 0.70, 0.65, 0.60, 0.56, 0.52, 0.52]   # после каждого сообщения
 
 
 def darkness(t):
-    """яркость экрана: ступеньками на каждом сообщении, с провалом-миганием в момент сообщения"""
+    """яркость экрана: ступеньками на каждом сообщении, с коротким провалом в момент сообщения"""
     if t < T['tvOn']:
         return 1.0
     lv = LEVELS[0]
     for j, e in enumerate(after_tv):
         if t >= e:
-            prev = LEVELS[j]
-            nxt = LEVELS[min(j + 1, len(LEVELS) - 1)]
+            prev, nxt = LEVELS[j], LEVELS[min(j + 1, len(LEVELS) - 1)]
             p = (t - e) / 0.3
             if p < 1:
-                dip = 0.55 * np.sin(np.pi * min(1, p * 2))      # быстрый провал и восстановление
-                lv = (prev + (nxt - prev) * min(1, p * 1.5)) * (1 - 0.35 * dip)
+                dip = 0.5 * np.sin(np.pi * min(1, p * 2))
+                lv = (prev + (nxt - prev) * min(1, p * 1.5)) * (1 - 0.3 * dip)
             else:
                 lv = nxt
     return lv
 
 
-def stage(t):
-    """0..1 — насколько «страшно» (растёт после «Зачем?...»)"""
-    if t < after_tv[2]:
-        return 0.0
-    k = (t - after_tv[2]) / (after_tv[-2] - after_tv[2])
-    return float(np.clip(0.3 + 0.7 * k, 0, 1))
-
-
-def flare(a, cx, cy, r, color, inten, streak=True):
-    d2 = ((XX - cx) / r) ** 2 + ((YY - cy) / r) ** 2
-    glow = np.exp(-d2)[..., None] * np.array(color) * inten
-    if streak:
-        s = np.exp(-((YY - cy) / (r * 0.06)) ** 2 - ((XX - cx) / (r * 6)) ** 2)[..., None]
-        glow = glow + s * np.array(color) * inten * 0.8
-    # «призраки» объектива на линии через центр кадра
-    for g, sz in ((0.6, 0.18), (1.25, 0.12), (1.6, 0.25)):
-        gx = W / 2 + (W / 2 - cx) * g
-        gy = H / 2 + (H / 2 - cy) * g
-        dd = ((XX - gx) ** 2 + (YY - gy) ** 2) / (r * sz) ** 2
-        glow = glow + (np.exp(-dd ** 2) * 0.25 * inten)[..., None] * np.array(color)
-    return 1 - (1 - a) * (1 - np.clip(glow, 0, 1))       # screen
-
-
-COLORS = [(1.0, 0.55, 0.25), (1.0, 0.25, 0.2), (0.85, 0.9, 1.0), (1.0, 0.8, 0.5), (0.6, 0.8, 1.0)]
-
-
-def flares_at(a, t):
-    st = stage(t)
-    if st <= 0:
-        return a, 0.0
-    shake = 0.0
-    events = [e for e in after_tv if e >= after_tv[2]]
-    # после «Я не понимаю...» блики идут очередью
-    final = after_tv[-2]
-    extra = list(np.arange(final + 0.25, T['black'], 0.33))
-    for j, e in enumerate(events + extra):
-        d = t - e
-        if d < -0.08 or d > 0.7:
-            continue
-        r = np.random.default_rng(int(e * 1000))
-        heavy = e >= final
-        inten = (0.55 + 0.55 * st) * (1.25 if heavy else 1.0)
-        env = np.exp(-max(d, 0) / (0.16 if heavy else 0.22)) * (1 if d >= 0 else (d + 0.08) / 0.08)
-        cx = r.uniform(0.1, 0.9) * W
-        cy = r.uniform(0.1, 0.85) * H
-        if heavy:   # в финале блики по краям, чтобы последние слова читались
-            cx = (r.choice([r.uniform(0.0, 0.22), r.uniform(0.78, 1.0)])) * W
-            cy = r.uniform(0.05, 0.95) * H
-        rad = r.uniform(180, 380) * (1 + 0.6 * max(d, 0))
-        col = COLORS[r.integers(0, len(COLORS))]
-        a = flare(a, cx, cy, rad, col, inten * env)
-        shake = max(shake, env * (10 + 18 * st))
-    return a, shake
-
-
 def grade(a, t):
     lv = darkness(t)
-    st = stage(t)
     gone = float(np.clip((t - T['tvOn']) / (T['black'] - T['tvOn']), 0, 1))
-    # холоднее и бесцветнее
     L = lum(a)[..., None]
-    a = L + (a - L) * (1 - 0.65 * gone)
+    a = L + (a - L) * (1 - 0.6 * gone)
     a = a * np.array([1 - 0.12 * gone, 1 - 0.05 * gone, 1 + 0.04 * gone])
     a = a * lv
-    # виньетка сжимается
     rr = ((XX - W / 2) ** 2 + (YY - H * 0.55) ** 2) / (W * W)
-    vig = np.exp(-rr * (0.6 + 4.5 * gone))
-    a = a * (0.25 + 0.75 * vig)[..., None] if gone > 0 else a
-    # мерцание и катящаяся тёмная полоса
-    if st > 0:
-        rng = np.random.default_rng(int(t * 20))
-        a = a * (1 - 0.12 * st * rng.random())
-        band = np.exp(-(((YY - (t * 260) % (H + 200) + 100) / 90.0) ** 2))[..., None]
-        a = a * (1 - 0.25 * st * band)
-    return a
+    vig = np.exp(-rr * (0.5 + 2.5 * gone))
+    return a * (0.35 + 0.65 * vig)[..., None]
+
+
+# Кадры глитча референса (шаг 1/20 с). Порядок взят из конца референса.
+SEQ = [1, 4, 5, 9, 3, 8, 11, 6, 14, 18, 12, 10, 16, 13, 19, 21]
+BLUE_READ = [(22, 54, 187), (25, 18, 203), (43, 120, 191), (28, 20, 225), (25, 18, 203), (7, 5, 245)]
+
+hits = after_tv[2:]                 # с «Зачем?...»
+FINAL_ME = after_tv[-2]             # «Я не понимаю...»
+FINAL = after_tv[-1]                # «Просто потому, что это весело»
+
+
+def glitch_kind(t):
+    """что показать в этом 20-кадровом шаге: None — обычный кадр; ('g', k) — кадр глитча; ('blue', i) — читаемый синий"""
+    step = int(round(t * 20))
+    if t >= FINAL:
+        # финал как в конце референса: синий кадр с белыми пузырями и чёрным жирным текстом,
+        # изредка — вспышка
+        d = t - FINAL
+        if d < 0.1:
+            return ('g', 1)
+        if step % 7 == 3:
+            return ('g', [5, 18, 13][step % 3])
+        return ('blue', step % len(BLUE_READ))
+    if t >= FINAL_ME:
+        d = t - FINAL_ME
+        if d < 0.15:
+            return ('g', SEQ[step % len(SEQ)])
+        # между ними — то сильный глитч, то обычный тёмный кадр
+        return ('g', SEQ[step % len(SEQ)]) if step % 5 in (0, 2, 3) else None
+    for j, e in enumerate(hits[:-2]):
+        n = 1 + j                          # с каждым сообщением глитч длиннее
+        if e <= t < e + n * 0.05 + 1e-6:
+            return ('g', SEQ[(int(round((t - e) * 20)) + j * 3) % len(SEQ)])
+    return None
+
+
+def apply_glitch(raw, t, base):
+    kind = glitch_kind(t)
+    if kind is None:
+        return base
+    if kind[0] == 'blue':
+        out = G.g_blue(raw, G.c(BLUE_READ[kind[1]]), 300 + int(t * 20), smear_lines=False)
+        return out
+    k = kind[1]
+    out = G.glitch(raw, k, G.zoom_grade(raw, 1.0, 1.0))
+    # до финала глитч тоже немного притушен вместе с экраном
+    if t < FINAL:
+        out = out * (0.55 + 0.45 * darkness(t))
+    return out
 
 
 # ---------------- главный цикл ----------------
@@ -233,14 +218,9 @@ for i in range(nframes):
             k = (t20 - (T['tvOn'] - 0.25)) / 0.25
             a = crt_off(grade(a, T['tvOn']), 1 - k) * 0.7 + tv_static(t20, src) * 0.3 * (1 - k)
         else:
-            a = grade(a, t20)
-            a, shake = flares_at(a, t20)
-            if shake > 0.5:
-                rng = np.random.default_rng(src)
-                a = np.roll(a, (int(rng.integers(-shake, shake + 1)), int(rng.integers(-shake, shake + 1))), axis=(0, 1))
-                a = rgb_split(a, shake * 0.6)
-            st = stage(t20)
-            a = a + grain_rng.normal(0, 0.01 + 0.03 * st, (H, W, 1)).astype(np.float32)
+            raw = a
+            a = apply_glitch(raw, t20, grade(raw, t20))
+            a = a + grain_rng.normal(0, 0.012, (H, W, 1)).astype(np.float32)
         cache = {src: a}
     ff.stdin.write((np.clip(a, 0, 1) * 255).astype(np.uint8).tobytes())
     if i % 90 == 0:

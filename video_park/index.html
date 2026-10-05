@@ -258,9 +258,9 @@ window.render = function (t) {
     const r = msgs[msgs.length - 1].el.querySelector('.b').getBoundingClientRect();
     const P = { x: ((r.left + r.right) / 2 - pr.left) / SX * 0.85 + ((r.left - pr.left) / SX) * 0.15, y: (r.top + r.bottom) / 2 - pr.top };
     const k = clamp((t - T.zoom) / (T.black - T.zoom));
-    z = 1 + 0.75 * k * k;
+    z = 1 + 0.4 * k * k;
     const S0 = { x: P.x * SX, y: P.y };
-    const F = { x: lerp(S0.x, 270, k), y: lerp(S0.y, 300, k) };
+    const F = { x: lerp(S0.x, 288, k), y: lerp(S0.y, 290, k) };
     tx = clamp(F.x - P.x * SX * z, 576 - 764 * SX * z, 0); ty = clamp(F.y - P.y * z, 576 - 576 * z, 0);
   }
   ph.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${(z * SX).toFixed(5)}, ${z.toFixed(5)})`;
